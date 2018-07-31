@@ -1,0 +1,74 @@
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="./d3.js"></script>
+    <script src="./topojson.js"></script>
+
+  <style>
+ 
+    .county:hover {
+      fill: #9FD3FA;
+    }
+  
+  
+  </style>
+
+  </head>
+  <body>
+
+    <svg width="960" height="600"></svg>
+
+
+  <script>
+    
+    let width = 960,
+        height = 600
+
+    let svg = d3.select("svg")
+    let path = d3.geoPath()
+
+    let education = d3.map()
+
+    //Brewer multi-hue sequential. Purple-red..
+    let colors = ['#fff7f3','#fde0dd','#fcc5c0','#fa9fb5','#f768a1','#dd3497','#ae017e','#7a0177']
+
+    let cScale = d3.scaleThreshold()
+                   .domain([3,12,21,30,39,48,66])
+                   .range(colors)
+
+    Promise.all([
+                  d3.csv("./for_user_education.csv"),
+                  d3.json("./counties-simple.json"),
+                ]
+    ).then( function(values) {
+     
+      // Create object to be able to query data by fips ID.
+      for (let stat of values[0]) {
+        education.set(stat.fips, 
+                      { state: stat.state, 
+                        county: stat.area_name, 
+                        bachelorsOrHigher: +stat.bachelorsOrHigher
+                      })
+      }
+
+      svg.append("g")
+          .attr("class", "usa")
+        .selectAll("path")
+        .data(topojson.feature(values[1], values[1].objects.counties).features)
+        .enter().append("path")
+        .attr("fill", function(d,i) { return cScale(+(education.get(d.id).bachelorsOrHigher)) })
+          .attr("stroke", "white")
+          .attr("d", path)
+          .attr("class", "county")
+          .attr("data-fips", (d) => (d.id))
+          .attr("data-education", (d) => (education.get(d.id).bachelorsOrHigher))
+
+    }).catch( function(error) {
+      console.log("Mapping error: ", error.message)
+    })
+
+  </script>
+  </body>
+</html>
