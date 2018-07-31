@@ -5,42 +5,81 @@
     <meta charset="utf-8">
     <script src="./d3.js"></script>
     <script src="./topojson.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Crimson+Text:400,600" rel="stylesheet">
 
-  <style>
+    <style>
 
-    body {
-      font-family: sans-serif;
-    }
-    .county:hover {
-      fill: #9FD3FA;
-    }
+      body {
+        font-family: sans-serif;
+        background-color: #3a5acc;/*#4a67d0;  /*         /* #f5f7fc; */
+      }
+      .county:hover {
+        fill: #9FD3FA;
+      }
 
-    #tooltip {
-      position: absolute;
-      min-width: 140px;
-      min-height: 60px;
-      padding: 8px;
-      border-radius: 3px;
-      box-shadow: 4px 4px 5px grey;
-      pointer-events: none;
-    }
-  
-  </style>
+      #tooltip {
+        position: absolute;
+        min-width: 140px;
+        min-height: 60px;
+        padding: 8px;
+        border-radius: 3px;
+        box-shadow: 4px 4px 5px grey;
+        pointer-events: none;
+      }
+
+      #map-container {
+        width: 960px;
+        margin: auto;
+        margin-top: 50px;
+        padding-bottom: 50px;
+        top: 100px;
+      }
+
+      svg {
+        position: absolute;
+      }
+
+      #title text {
+        font-family: 'Crimson Text', serif;
+        font-weight: 600;
+        font-size: 32px;
+      }
+
+      #title text,
+      #source text,
+      #description text {
+        fill: white;
+      }
+    
+    </style>
 
   </head>
   <body>
-
-    <svg width="960" height="600"></svg>
-
-  <script>
+   
+    <div id="map-container">
+      <svg class="map"></svg>
+    </div>
     
+  <script>
+    const margin = { top: 80, bottom: 50 }
     let width = 960,
-        height = 600
+        height = 730 - margin.top - margin.bottom
+    
+    
+    let path = d3.geoPath()
+    let education = d3.map()
+
+    
+    //Brewer multi-hue sequential. Purple-red..
+    let colors = ['#fff7f3','#fde0dd','#fcc5c0','#fa9fb5','#f768a1','#dd3497','#ae017e','#7a0177']
+
+    let cScale = d3.scaleThreshold()
+                   .domain([3,12,21,30,39,48,66])
+                   .range(colors)
 
     let svg = d3.select("svg")
-    let path = d3.geoPath()
-
-    let education = d3.map()
+                .attr("width", width)
+                .attr("height", height + margin.top + margin.bottom)
 
     let tooltip = d3.select("body")
                     .append("div")
@@ -48,12 +87,28 @@
                       .style("display", "none")
                       .style("background-color", '#889be0')
 
-    //Brewer multi-hue sequential. Purple-red..
-    let colors = ['#fff7f3','#fde0dd','#fcc5c0','#fa9fb5','#f768a1','#dd3497','#ae017e','#7a0177']
+    d3.select(".map")
+      .append("g")
+        .attr("id", "title")
+        .attr("transform", "translate(" + width * .20 + "," + "50)")
+      .append("text")
+        .text("Educational Attainment in the United States")
 
-    let cScale = d3.scaleThreshold()
-                   .domain([3,12,21,30,39,48,66])
-                   .range(colors)
+    d3.select(".map")
+      .append("g")
+        .attr("id", "description")
+        .attr("transform", "translate(" + width * .20 + "," + "80)")
+      .append("text")
+        .text("Percentage of adults age 25 and older with a bachelor's degree or higher. 2010 - 2014")
+
+
+    d3.select(".map")
+      .append("g")
+        .attr("id", "source")
+        .attr("transform", "translate(" + width * .65 + "," + (height + margin.top + margin.bottom) + ")")
+      .append("text")
+        .html("Source: " + "<a href='https://www.ers.usda.gov/data-products/county-level-data-sets/download-data.aspx'>USDA Economic Research Service</a>")
+
 
     Promise.all([
                   d3.csv("./for_user_education.csv"),
@@ -72,6 +127,7 @@
 
       svg.append("g")
           .attr("class", "usa")
+          .attr("transform", "translate(0" + "," + margin.top + ")" )
         .selectAll("path")
         .data(topojson.feature(values[1], values[1].objects.counties).features)
         .enter().append("path")
