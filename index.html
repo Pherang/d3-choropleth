@@ -7,11 +7,23 @@
     <script src="./topojson.js"></script>
 
   <style>
- 
+
+    body {
+      font-family: sans-serif;
+    }
     .county:hover {
       fill: #9FD3FA;
     }
-  
+
+    #tooltip {
+      position: absolute;
+      min-width: 140px;
+      min-height: 60px;
+      padding: 8px;
+      border-radius: 3px;
+      box-shadow: 4px 4px 5px grey;
+      pointer-events: none;
+    }
   
   </style>
 
@@ -19,7 +31,6 @@
   <body>
 
     <svg width="960" height="600"></svg>
-
 
   <script>
     
@@ -30,6 +41,12 @@
     let path = d3.geoPath()
 
     let education = d3.map()
+
+    let tooltip = d3.select("body")
+                    .append("div")
+                      .attr("id", "tooltip")
+                      .style("display", "none")
+                      .style("background-color", '#889be0')
 
     //Brewer multi-hue sequential. Purple-red..
     let colors = ['#fff7f3','#fde0dd','#fcc5c0','#fa9fb5','#f768a1','#dd3497','#ae017e','#7a0177']
@@ -64,10 +81,40 @@
           .attr("class", "county")
           .attr("data-fips", (d) => (d.id))
           .attr("data-education", (d) => (education.get(d.id).bachelorsOrHigher))
+          .on("mouseover", showTip)
+          .on("mousemove", updateTip)
+          .on("mouseout", hideTip)
 
     }).catch( function(error) {
       console.log("Mapping error: ", error.message)
     })
+
+    function showTip() {
+      tooltip
+        .transition()
+        .duration(200)
+        .style("opacity", 1)
+    }
+
+    function updateTip(data) {
+        tooltip
+          .style("display", "inline")
+          .attr("data-education", () => (education.get(data.id).bachelorsOrHigher))
+          .style("top", () => (d3.event.pageY + "px"))
+          .style("left", () => ( (d3.event.pageX + 20) + "px") )
+        .html( education.get(data.id).county + "<br>" + 
+               education.get(data.id).state + "<br>" +
+               "Percentage: " + education.get(data.id).bachelorsOrHigher
+            )
+    }
+    
+    function hideTip() {
+      tooltip
+        .transition()
+        .duration(200)
+        .style("opacity", 0)
+    }
+
 
   </script>
   </body>
