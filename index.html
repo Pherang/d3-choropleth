@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <script src="./d3.js"></script>
     <script src="./topojson.js"></script>
-    <link href="https://fonts.googleapis.com/css?family=Crimson+Text:400,600" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Crimson+Text:400,600|Nunito:300,400" rel="stylesheet">
 
     <style>
 
@@ -21,6 +21,8 @@
         position: absolute;
         min-width: 140px;
         min-height: 60px;
+        color: white;
+        font-family: 'Nunito', sans-serif;
         padding: 8px;
         border-radius: 3px;
         box-shadow: 4px 4px 5px grey;
@@ -29,8 +31,10 @@
 
       #map-container {
         width: 960px;
+        height: 730px;
         margin: auto;
         margin-top: 50px;
+        margin-bottom: 50px;
         padding-bottom: 50px;
         top: 100px;
       }
@@ -50,6 +54,20 @@
       #description text {
         fill: white;
       }
+
+      #description text,
+      #source text {
+        font-family: 'Nunito', sans-serif;
+      }
+
+      #legendyaxis text {
+        fill: white;
+      }
+      
+      #legendyaxis path,
+      #legendyaxis line {
+        stroke: white;
+      }
     
     </style>
 
@@ -61,32 +79,67 @@
     </div>
     
   <script>
+
     const margin = { top: 80, bottom: 50 }
-    let width = 960,
+    const width = 960,
         height = 730 - margin.top - margin.bottom
     
-    
-    let path = d3.geoPath()
-    let education = d3.map()
-
+    const path = d3.geoPath()
+    const education = d3.map()
     
     //Brewer multi-hue sequential. Purple-red..
-    let colors = ['#fff7f3','#fde0dd','#fcc5c0','#fa9fb5','#f768a1','#dd3497','#ae017e','#7a0177']
+    const colors = ['#fff7f3','#fde0dd','#fcc5c0','#fa9fb5','#f768a1','#dd3497','#ae017e','#7a0177','#530151']
 
-    let cScale = d3.scaleThreshold()
-                   .domain([3,12,21,30,39,48,66])
+    const cScale = d3.scaleThreshold()
+                   .domain([3,12,21,30,39,48,57,66])
                    .range(colors)
 
-    let svg = d3.select("svg")
+    const svg = d3.select("svg")
                 .attr("width", width)
                 .attr("height", height + margin.top + margin.bottom)
 
-    let tooltip = d3.select("body")
+    const tooltip = d3.select("body")
                     .append("div")
                       .attr("id", "tooltip")
                       .style("display", "none")
                       .style("background-color", '#889be0')
+    
+    const legendHeight = 225
+    
+    const legendyScale = d3.scaleLinear()
+                          .domain([-6,74])
+                          .range([legendHeight, 0])
 
+    const yAxis = d3.axisRight(legendyScale)
+                    .tickSizeOuter(0)
+                    .tickValues(cScale.domain())
+                    .tickFormat((d) => (d + "%"))
+
+    let legend = d3.select(".map")
+      .append("g")
+        .attr("id","legend")
+        .attr("transform", "translate(" + width * .95 + "," + height * .6 + ")")
+
+    legend.selectAll(".legendRect")
+      .data(cScale.range().map( function(d) {
+        d = cScale.invertExtent(d)
+        if (d[0] == null) d[0] = legendyScale.domain()[0] // Sets first extents min value to 0
+        if (d[1] == null) d[1] = legendyScale.domain()[1] // Sets last extents max value to 74 
+        return d
+      }))
+      .enter().append("rect")
+        .attr("y", (d) => (legendyScale(d[1])) ) 
+        .attr("width", 10)
+        .attr("height", (d) => (legendyScale(d[0]) - legendyScale(d[1])) )
+        .attr("fill", (d) => (cScale(d[0])) )
+
+    legend.append("g")
+      .attr("id","legendyaxis")
+      .attr("transform", "translate(10,0)")
+      .call(yAxis)
+      .select("path").remove()
+    
+      
     d3.select(".map")
       .append("g")
         .attr("id", "title")
@@ -101,7 +154,6 @@
       .append("text")
         .text("Percentage of adults age 25 and older with a bachelor's degree or higher. 2010 - 2014")
 
-
     d3.select(".map")
       .append("g")
         .attr("id", "source")
@@ -115,7 +167,6 @@
                   d3.json("./counties-simple.json"),
                 ]
     ).then( function(values) {
-     
       // Create object to be able to query data by fips ID.
       for (let stat of values[0]) {
         education.set(stat.fips, 
@@ -124,7 +175,6 @@
                         bachelorsOrHigher: +stat.bachelorsOrHigher
                       })
       }
-
       svg.append("g")
           .attr("class", "usa")
           .attr("transform", "translate(0" + "," + margin.top + ")" )
@@ -133,6 +183,7 @@
         .enter().append("path")
         .attr("fill", function(d,i) { return cScale(+(education.get(d.id).bachelorsOrHigher)) })
           .attr("stroke", "white")
+          .attr("stroke-width", .8)
           .attr("d", path)
           .attr("class", "county")
           .attr("data-fips", (d) => (d.id))
@@ -170,7 +221,6 @@
         .duration(200)
         .style("opacity", 0)
     }
-
 
   </script>
   </body>
