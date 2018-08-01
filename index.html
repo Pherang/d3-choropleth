@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <script src="./d3.min.js"></script>
     <script src="./topojson.min.js"></script>
+    <script src="./bundle.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Crimson+Text:400,600|Nunito:300,400" rel="stylesheet">
 
     <style>
@@ -25,7 +26,7 @@
         font-family: 'Nunito', sans-serif;
         padding: 8px;
         border-radius: 3px;
-        box-shadow: 4px 4px 5px grey;
+        box-shadow: 3px 3px 3px black;
         pointer-events: none;
       }
 
@@ -131,7 +132,7 @@
         .attr("y", (d) => (legendyScale(d[1])) ) 
         .attr("width", 10)
         .attr("height", (d) => (legendyScale(d[0]) - legendyScale(d[1])) )
-        .attr("fill", (d) => (cScale(d[0])) )
+  .attr("fill", (d) => (cScale(d[0])) )
 
     legend.append("g")
       .attr("id","legendyaxis")
@@ -174,6 +175,7 @@
                         bachelorsOrHigher: +stat.bachelorsOrHigher
                       })
       }
+
       svg.append("g")
           .attr("class", "usa")
           .attr("transform", "translate(0" + "," + margin.top + ")" )
