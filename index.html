@@ -53,6 +53,7 @@
       #source text,
       #description text {
         fill: white;
+        color: white;
       }
 
       #description text,
@@ -160,7 +161,6 @@
         .attr("transform", "translate(" + width * .65 + "," + (height + margin.top + margin.bottom) + ")")
       .append("text")
         .html("Source: " + "<a href='https://www.ers.usda.gov/data-products/county-level-data-sets/download-data.aspx'>USDA Economic Research Service</a>")
-
 
     Promise.all([
                   d3.csv("./for_user_education.csv"),
